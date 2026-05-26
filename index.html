@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CRAZYLABS // SECURE TERMINAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:   #00ff41;
+    --dim:     #00aa2e;
+    --amber:   #ffb000;
+    --bg:      #000000;
+    --sent-bg: #001a06;
+    --recv-bg: #000d02;
+    --glow:    0 0 6px #00ff41, 0 0 12px #00cc33;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--green);
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  /* ── digital rain canvas ── */
+  #rain {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+
+  /* ── scanline overlay ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0,0,0,0.18) 3px,
+      rgba(0,0,0,0.18) 4px
+    );
+  }
+
+  /* ── layout ── */
+  #app {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* ── header ── */
+  #header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--dim);
+    text-shadow: var(--glow);
+    letter-spacing: 2px;
+    font-size: 13px;
+  }
+  #header .title { color: var(--green); font-size: 15px; letter-spacing: 3px; }
+  #header .node  { color: var(--dim); }
+  #header #change-group-btn {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 2px 8px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: color .2s, border-color .2s;
+  }
+  #header #change-group-btn:hover { color: var(--green); border-color: var(--green); }
+
+  /* ── group picker ── */
+  #picker {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+  }
+  #picker h1 {
+    color: var(--green);
+    text-shadow: var(--glow);
+    letter-spacing: 4px;
+    font-size: 20px;
+  }
+  #picker p { color: var(--dim); letter-spacing: 2px; font-size: 13px; }
+  .group-btn {
+    width: 340px;
+    padding: 18px 24px;
+    background: transparent;
+    border: 1px solid var(--dim);
+    color: var(--green);
+    font-family: inherit;
+    font-size: 16px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    text-align: left;
+    transition: all .2s;
+    text-shadow: var(--glow);
+  }
+  .group-btn:hover {
+    background: #001a06;
+    border-color: var(--green);
+    box-shadow: 0 0 12px #00ff4133;
+  }
+  .group-btn .sub { display: block; color: var(--dim); font-size: 11px; letter-spacing: 1px; margin-top: 4px; }
+
+  /* ── feed ── */
+  #feed {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scroll-behavior: smooth;
+  }
+  #feed::-webkit-scrollbar { width: 6px; }
+  #feed::-webkit-scrollbar-track { background: #000; }
+  #feed::-webkit-scrollbar-thumb { background: var(--dim); }
+
+  .msg {
+    padding: 6px 10px;
+    border-left: 2px solid var(--dim);
+    background: var(--recv-bg);
+    animation: fadeIn .3s ease;
+  }
+  .msg.sent {
+    border-left-color: var(--green);
+    background: var(--sent-bg);
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .msg .meta {
+    font-size: 11px;
+    color: var(--dim);
+    margin-bottom: 4px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .msg .meta .tag {
+    font-size: 12px;
+    font-weight: bold;
+  }
+  .msg.sent .meta .tag { color: var(--green); text-shadow: var(--glow); }
+  .msg .content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--green);
+    line-height: 1.5;
+  }
+  .msg.sent .content { text-shadow: var(--glow); }
+  .msg.sent::after { content: ' ◄'; color: var(--dim); font-size: 11px; }
+
+  /* ── status bar ── */
+  #status-bar {
+    flex: 0 0 auto;
+    padding: 3px 16px;
+    font-size: 11px;
+    color: var(--dim);
+    border-top: 1px solid #001a06;
+    min-height: 20px;
+  }
+  #status-bar.error { color: var(--amber); }
+
+  /* ── composer ── */
+  #composer {
+    flex: 0 0 auto;
+    border-top: 1px solid var(--dim);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* mode tabs for group 2 */
+  #mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 4px;
+  }
+  .mode-tab {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 4px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all .15s;
+  }
+  .mode-tab:not(:first-child) { border-left: none; }
+  .mode-tab.active { background: #001a06; color: var(--green); border-color: var(--green); }
+  .mode-tab:hover:not(.active) { color: var(--green); }
+
+  /* composer rows */
+  .composer-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  select, input[type="text"], textarea {
+    background: #000;
+    border: 1px solid var(--dim);
+    color: var(--green);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 8px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  select:focus, input[type="text"]:focus, textarea:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 6px #00ff4133;
+  }
+
+  #method-select { width: 90px; flex: 0 0 auto; }
+  #url-input { flex: 1 1 auto; }
+  #body-textarea, #freetext-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 56px;
+    max-height: 160px;
+  }
+  #body-textarea { min-height: 44px; }
+
+  /* blinking cursor effect on textarea */
+  textarea {
+    caret-color: var(--green);
+  }
+
+  #send-btn {
+    align-self: flex-end;
+    background: transparent;
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 8px 22px;
+    cursor: pointer;
+    text-shadow: var(--glow);
+    transition: all .2s;
+  }
+  #send-btn:hover { background: #001a06; box-shadow: 0 0 10px #00ff4144; }
+  #send-btn:active { transform: scale(0.97); }
+  #send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .hidden { display: none !important; }
+
+  /* config error screen */
+  #config-error {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 40px;
+  }
+  #config-error h2 { color: var(--amber); letter-spacing: 3px; font-size: 18px; }
+  #config-error p, #config-error pre {
+    color: var(--dim);
+    font-size: 13px;
+    max-width: 560px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  #config-error pre {
+    text-align: left;
+    background: #060606;
+    border: 1px solid var(--dim);
+    padding: 12px 16px;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+
+<!-- digital rain canvas -->
+<canvas id="rain"></canvas>
+
+<!-- config error (shown if config.js missing / creds empty) -->
+<div id="config-error" class="hidden">
+  <h2>⚠ CONFIGURATION ERROR</h2>
+  <p>No Supabase credentials found. The terminal cannot connect to the database.</p>
+  <pre>1. Copy  config.sample.js  →  config.js
+2. Open config.js and fill in:
+   const SUPABASE_URL     = "https://xxxx.supabase.co";
+   const SUPABASE_ANON_KEY = "eyJ...";
+3. Reload this page.</pre>
+  <p>See README.md for full setup instructions.</p>
+</div>
+
+<!-- group picker overlay -->
+<div id="picker" class="hidden">
+  <h1>CRAZYLABS // SECURE TERMINAL</h1>
+  <p>SELECT YOUR NODE TO BEGIN</p>
+  <button class="group-btn" data-group="1">
+    CLIENT <span class="sub">[GROUP 1] — Issues HTTP requests</span>
+  </button>
+  <button class="group-btn" data-group="2">
+    API <span class="sub">[GROUP 2] — Routes requests, queries the database</span>
+  </button>
+  <button class="group-btn" data-group="3">
+    DATABASE <span class="sub">[GROUP 3] — Executes queries, returns results</span>
+  </button>
+</div>
+
+<!-- main app shell -->
+<div id="app">
+  <div id="header">
+    <span class="title">CRAZYLABS // SECURE TERMINAL</span>
+    <span class="node" id="node-label">::  ::</span>
+    <button id="change-group-btn">CHANGE NODE</button>
+  </div>
+
+  <div id="feed"></div>
+
+  <div id="status-bar">CONNECTING…</div>
+
+  <div id="composer">
+    <!-- Group 2 mode tabs -->
+    <div id="mode-tabs" class="hidden">
+      <button class="mode-tab active" data-mode="reply">REPLY TO CLIENT</button>
+      <button class="mode-tab" data-mode="query">QUERY DATABASE</button>
+    </div>
+
+    <!-- Group 1 composer fields -->
+    <div id="g1-fields" class="hidden">
+      <div class="composer-row">
+        <select id="method-select">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>DELETE</option>
+        </select>
+        <input type="text" id="url-input" placeholder="/api/endpoint" />
+      </div>
+      <textarea id="body-textarea" placeholder="BODY (optional): { &quot;key&quot;: &quot;value&quot; }"></textarea>
+    </div>
+
+    <!-- Group 2 & 3 free-text composer -->
+    <div id="free-fields" class="hidden">
+      <textarea id="freetext-textarea" placeholder=""></textarea>
+    </div>
+
+    <div class="composer-row" style="justify-content:flex-end">
+      <button id="send-btn">TRANSMIT ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase client from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- user config (gitignored) -->
+<script src="config.js" onerror="window.__configMissing=true"></script>
+
+<script>
+// ─────────────────────────────────────────────
+// 0. Digital rain canvas
+// ─────────────────────────────────────────────
+(function rainCanvas() {
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+  const COLS_CHAR = 20;
+  let cols, drops;
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols  = Math.floor(canvas.width / COLS_CHAR);
+    drops = new Array(cols).fill(1);
+  }
+
+  const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+
+  function draw() {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = `${COLS_CHAR - 2}px 'Share Tech Mono', monospace`;
+    for (let i = 0; i < drops.length; i++) {
+      const ch = CHARS[Math.floor(Math.random() * CHARS.length)];
+      ctx.fillText(ch, i * COLS_CHAR, drops[i] * COLS_CHAR);
+      if (drops[i] * COLS_CHAR > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 50);
+})();
+
+// ─────────────────────────────────────────────
+// 1. Config check
+// ─────────────────────────────────────────────
+function showConfigError() {
+  document.getElementById('config-error').classList.remove('hidden');
+  document.getElementById('app').style.opacity = '0.15';
+  document.getElementById('app').style.pointerEvents = 'none';
+}
+
+if (window.__configMissing ||
+    typeof SUPABASE_URL === 'undefined' || !SUPABASE_URL ||
+    typeof SUPABASE_ANON_KEY === 'undefined' || !SUPABASE_ANON_KEY) {
+  showConfigError();
+  // stop here — rest of script won't run meaningful code
+}
+
+// ─────────────────────────────────────────────
+// 2. Supabase init (only if config present)
+// ─────────────────────────────────────────────
+let supabase = null;
+if (!window.__configMissing &&
+    typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL &&
+    typeof SUPABASE_ANON_KEY !== 'undefined' && SUPABASE_ANON_KEY) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// ─────────────────────────────────────────────
+// 3. State
+// ─────────────────────────────────────────────
+let currentGroup = null;
+let g2Mode = 'reply'; // 'reply' | 'query'
+const seenIds = new Set();
+
+const GROUP_NAMES = { 1: 'CLIENT', 2: 'API', 3: 'DATABASE' };
+
+// Visibility rule: which (from, to) pairs does each group see?
+function isVisible(msg, group) {
+  const f = msg.from_group, t = msg.to_group;
+  if (group === 1) return (f === 1 && t === 2) || (f === 2 && t === 1);
+  if (group === 2) return true;
+  if (group === 3) return (f === 3 && t === 2) || (f === 2 && t === 3);
+  return false;
+}
+
+// ─────────────────────────────────────────────
+// 4. Group picker
+// ─────────────────────────────────────────────
+function showPicker() {
+  document.getElementById('picker').classList.remove('hidden');
+}
+
+function hidePicker() {
+  document.getElementById('picker').classList.add('hidden');
+}
+
+document.querySelectorAll('.group-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    selectGroup(parseInt(btn.dataset.group, 10));
+  });
+});
+
+document.getElementById('change-group-btn').addEventListener('click', () => {
+  showPicker();
+});
+
+function selectGroup(g) {
+  currentGroup = g;
+  localStorage.setItem('crazylabs_group', g);
+  hidePicker();
+  applyGroupUI();
+  if (supabase) initTerminal();
+}
+
+function applyGroupUI() {
+  const g = currentGroup;
+  const names = { 1: 'CLIENT [GROUP 1]', 2: 'API [GROUP 2]', 3: 'DATABASE [GROUP 3]' };
+  document.getElementById('node-label').textContent = `:: NODE: ${names[g]} ::`;
+
+  // composer visibility
+  document.getElementById('mode-tabs').classList.toggle('hidden', g !== 2);
+  document.getElementById('g1-fields').classList.toggle('hidden', g !== 1);
+  document.getElementById('free-fields').classList.toggle('hidden', g === 1);
+
+  // placeholder per group/mode
+  updateFreePlaceholder();
+}
+
+function updateFreePlaceholder() {
+  const ta = document.getElementById('freetext-textarea');
+  if (currentGroup === 2) {
+    if (g2Mode === 'reply') {
+      ta.placeholder = '200 OK\n{ "data": { ... } }';
+    } else {
+      ta.placeholder = 'SELECT * FROM users WHERE id = $1;';
+    }
+  } else if (currentGroup === 3) {
+    ta.placeholder = 'RESULT: [{ "id": 1, "name": "Alice" }]';
+  }
+}
+
+// ─────────────────────────────────────────────
+// 5. Mode tabs (group 2)
+// ─────────────────────────────────────────────
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    g2Mode = tab.dataset.mode;
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    updateFreePlaceholder();
+  });
+});
+
+// ─────────────────────────────────────────────
+// 6. Feed rendering
+// ─────────────────────────────────────────────
+function renderMessage(msg) {
+  const feed = document.getElementById('feed');
+  const sent = msg.from_group === currentGroup;
+
+  const div = document.createElement('div');
+  div.classList.add('msg');
+  if (sent) div.classList.add('sent');
+
+  const ts = new Date(msg.created_at).toLocaleTimeString('en-GB', { hour12: false });
+  const tag = `[${msg.from_group} → ${msg.to_group}]`;
+
+  div.innerHTML = `
+    <div class="meta">
+      <span>${ts}</span>
+      <span class="tag">${tag}</span>
+      <span>${GROUP_NAMES[msg.from_group]} → ${GROUP_NAMES[msg.to_group]}</span>
+    </div>
+    <div class="content">${escHtml(msg.content)}</div>
+  `;
+
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function escHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function setStatus(msg, isError) {
+  const bar = document.getElementById('status-bar');
+  bar.textContent = msg;
+  bar.className = isError ? 'error' : '';
+}
+
+// ─────────────────────────────────────────────
+// 7. Supabase fetch + realtime + polling
+// ─────────────────────────────────────────────
+async function fetchMessages() {
+  if (!supabase) return;
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    setStatus('ERROR: ' + error.message, true);
+    return;
+  }
+
+  for (const msg of data) {
+    if (!seenIds.has(msg.id) && isVisible(msg, currentGroup)) {
+      seenIds.add(msg.id);
+      renderMessage(msg);
+    }
+  }
+}
+
+function subscribeRealtime() {
+  if (!supabase) return;
+  supabase
+    .channel('messages-channel')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+      const msg = payload.new;
+      if (!seenIds.has(msg.id) && isVisible(msg, currentGroup)) {
+        seenIds.add(msg.id);
+        renderMessage(msg);
+      }
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') {
+        setStatus('CONNECTED — REALTIME ACTIVE', false);
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setStatus('REALTIME ERROR — polling fallback active', true);
+      }
+    });
+}
+
+async function initTerminal() {
+  seenIds.clear();
+  document.getElementById('feed').innerHTML = '';
+  setStatus('CONNECTING…', false);
+  await fetchMessages();
+  subscribeRealtime();
+  // safety-net poll every 5 s
+  if (window.__pollInterval) clearInterval(window.__pollInterval);
+  window.__pollInterval = setInterval(fetchMessages, 5000);
+}
+
+// ─────────────────────────────────────────────
+// 8. Send message
+// ─────────────────────────────────────────────
+async function sendMessage() {
+  if (!supabase || !currentGroup) return;
+
+  let content = '';
+  let to_group = null;
+
+  if (currentGroup === 1) {
+    const method = document.getElementById('method-select').value;
+    const url    = document.getElementById('url-input').value.trim();
+    const body   = document.getElementById('body-textarea').value.trim();
+    if (!url) { setStatus('ERROR: URL is required', true); return; }
+    content = `${method} ${url}`;
+    if (body) content += `\nBODY: ${body}`;
+    to_group = 2;
+  } else if (currentGroup === 2) {
+    content  = document.getElementById('freetext-textarea').value.trim();
+    to_group = g2Mode === 'reply' ? 1 : 3;
+  } else {
+    content  = document.getElementById('freetext-textarea').value.trim();
+    to_group = 2;
+  }
+
+  if (!content) { setStatus('ERROR: Message cannot be empty', true); return; }
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+
+  const { error } = await supabase.from('messages').insert({
+    from_group: currentGroup,
+    to_group:   to_group,
+    content:    content
+  });
+
+  btn.disabled = false;
+
+  if (error) {
+    setStatus('SEND ERROR: ' + error.message, true);
+    return;
+  }
+
+  // clear inputs
+  if (currentGroup === 1) {
+    document.getElementById('url-input').value = '';
+    document.getElementById('body-textarea').value = '';
+  } else {
+    document.getElementById('freetext-textarea').value = '';
+  }
+
+  setStatus('TRANSMITTED ✓', false);
+  setTimeout(() => setStatus('CONNECTED — REALTIME ACTIVE', false), 2000);
+}
+
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+// send on Ctrl+Enter in any textarea
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+});
+
+// ─────────────────────────────────────────────
+// 9. Boot
+// ─────────────────────────────────────────────
+(function boot() {
+  if (window.__configMissing ||
+      typeof SUPABASE_URL === 'undefined' || !SUPABASE_URL) return;
+
+  const saved = localStorage.getItem('crazylabs_group');
+  if (saved && ['1','2','3'].includes(saved)) {
+    selectGroup(parseInt(saved, 10));
+  } else {
+    applyGroupUI();
+    showPicker();
+  }
+})();
+</script>
+</body>
+</html>
