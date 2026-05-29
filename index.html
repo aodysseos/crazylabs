@@ -566,10 +566,36 @@ BODY: { "username": "<span class="blank">___</span>", "password": "<span class="
 
       <!-- GROUP 3 -->
       <div id="briefing-g3" class="briefing-group hidden">
+
         <div class="briefing-section">
-          <div class="briefing-label">// BRIEFING STATUS</div>
-          <p style="color:var(--dim);">// NO BRIEFING DATA LOADED FOR THIS NODE</p>
+          <div class="briefing-label">// INTRODUCTION</div>
+          <p style="color:var(--amber);margin-bottom:10px;">⚠ IMPORTANT — FOR YOUR EYES ONLY. DO NOT SHARE WITH GROUP 1.</p>
+          <p>I have good news and bad news! But mostly bad! You are now shrunk to the size of an atom but luckily you have fallen inside the mad scientist's laptop internals.</p>
+          <p style="margin-top:10px;">You are now the DATABASE. You hold every piece of information the lab knows. Group 1 is the CLIENT and Group 2 is the API. Group 2 (the API) is the only team allowed to speak to you, and they will only speak in SQL.</p>
+          <p style="margin-top:10px;">You are not clever. You do not guess, interpret, or help. You only do exactly what a SQL command tells you. If a SQL command is malformed, you return an error.</p>
+          <p style="margin-top:10px;color:var(--dim);font-style:italic;">However, for a database you are surprisingly low on tables! You must have at least three, but I see none. Oh dear! ...well, tables will be tables.</p>
         </div>
+
+        <div class="briefing-section">
+          <div class="briefing-label">// MANUAL — HOW TO RESPOND TO SQL</div>
+          <p style="margin-bottom:10px;">Group 2 will send you SQL commands. Look up the answer in your tables, and hand back the rows.</p>
+
+          <p style="margin-bottom:6px;color:var(--dim);">── users table ─────────────────────────────────</p>
+          <p style="margin-bottom:6px;">If you find a match → hand back 1 row:</p>
+          <pre class="briefing-manual">1 | madscientist | USETHEAPI</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If nothing matches → hand back 0 rows:</p>
+          <pre class="briefing-manual">(no rows)</pre>
+
+          <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── messages table ───────────────────────────────</p>
+          <p style="margin-bottom:6px;">Hand back the first N rows (where N is the LIMIT number). For LIMIT 3, that's all three rows:</p>
+          <pre class="briefing-manual">1 | Hello world!
+2 | Hello new world!
+3 | Hello new new world!</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If nothing matches → hand back 0 rows:</p>
+          <pre class="briefing-manual">(no rows)</pre>
+        </div>
+
+      </div>
       </div>
 
     </div>
