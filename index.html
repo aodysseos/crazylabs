@@ -460,10 +460,107 @@ BODY: { username: "madscientist", password: "G3G1B2G2C2B2A1F1C3" }
 
       <!-- GROUP 2 -->
       <div id="briefing-g2" class="briefing-group hidden">
+
         <div class="briefing-section">
-          <div class="briefing-label">// BRIEFING STATUS</div>
-          <p style="color:var(--dim);">// NO BRIEFING DATA LOADED FOR THIS NODE</p>
+          <div class="briefing-label">// INTRODUCTION</div>
+          <p style="color:var(--amber);margin-bottom:10px;">⚠ IMPORTANT — FOR YOUR EYES ONLY. DO NOT SHARE WITH GROUP 1.</p>
+          <p>I have good news and bad news! But mostly bad! You are now shrunk to the size of an atom but luckily you have fallen inside the mad scientist's laptop internals.</p>
+          <p style="margin-top:10px;">You are now the server (API). Group 1 is the CLIENT — they can only reach the DATABASE through you. Group 3 is the DATABASE — only you can speak to them, and you must speak in SQL.</p>
+          <p style="margin-top:10px;">You do not store anything. You do not invent answers. For every request that arrives from Group 1, you do three things in order:</p>
+          <pre class="briefing-manual" style="margin-top:8px;">1. Validate the request.
+2. Translate it to SQL and send it to the DATABASE.
+3. Respond to Group 1 with the correct status code and body.</pre>
         </div>
+
+        <div class="briefing-section">
+          <div class="briefing-label">// A QUICK STORY</div>
+          <p>Deep inside the mad scientist's laptop lives a database — a stack of dusty filing cabinets full of every secret the lab has ever known. The database doesn't speak English. It only understands a strange, formal language called SQL (pronounced "sequel").</p>
+          <p style="margin-top:8px;">To talk to the database, you have to use the right words in the right order. There are only five words you need to learn. Solve the five puzzles below to discover them.</p>
+        </div>
+
+        <div class="briefing-section">
+          <div class="briefing-label">// ASSEMBLY — BUILDING YOUR OPERATING MANUAL</div>
+          <p style="margin-bottom:10px;">You should have six words written down:</p>
+          <pre class="briefing-manual">1. The "show me" verb:       <span class="blank">____________________</span>
+2. The "destroy" verb:       <span class="blank">____________________</span>
+3. The connecting word:      <span class="blank">____________________</span>
+4. The filter word:          <span class="blank">____________________</span>
+5. The "both" word:          <span class="blank">____________________</span>
+6. The "no more than" word:  <span class="blank">____________________</span></pre>
+          <p style="margin-top:12px;margin-bottom:8px;">Use those words to complete your SQL queries:</p>
+          <pre class="briefing-manual"><span style="color:var(--dim);">// LOGIN CHECK</span>
+<span class="blank">______</span> * <span class="blank">______</span> users <span class="blank">______</span> username = '<span class="blank">___</span>' <span class="blank">______</span> password = '<span class="blank">___</span>'
+  (1)        (3)          (4)                           (5)
+
+<span style="color:var(--dim);">// LIST MESSAGES</span>
+<span class="blank">______</span> id, content <span class="blank">______</span> messages <span class="blank">______</span> <span class="blank">___</span>
+  (1)               (3)           (6)   (N)
+
+<span style="color:var(--dim);">// GET MESSAGE BY ID</span>
+<span class="blank">______</span> id, content <span class="blank">______</span> messages <span class="blank">______</span> id = <span class="blank">___</span>
+  (1)               (3)           (4)         (N)
+
+<span style="color:var(--dim);">// DELETE PROTOCOL</span>
+<span class="blank">______</span> <span class="blank">______</span> protocols <span class="blank">______</span> name = '<span class="blank">___</span>'
+  (2)    (3)             (4)</pre>
+        </div>
+
+        <div class="briefing-section">
+          <div class="briefing-label">// RESPONSE GUIDE</div>
+          <p style="color:var(--amber);margin-bottom:10px;">⚠ The client must call POST /login first. If they try any other endpoint before logging in, respond with:</p>
+          <pre class="briefing-manual">401 { "message": "unauthorised" }</pre>
+
+          <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── 1. POST /login ──────────────────────────────</p>
+          <p style="margin-bottom:6px;">Client sends:</p>
+          <pre class="briefing-manual">POST https://madscientistlabs.com/api/login
+BODY: { "username": "<span class="blank">___</span>", "password": "<span class="blank">___</span>" }</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If DATABASE returns 1 row → respond:</p>
+          <pre class="briefing-manual">200 OK { "success": true, "message": "Success! Logged in. We have shrunk and fallen into the computer. We are the API and DATABASE. We can help each other escape. Keep sending requests!" }</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If DATABASE returns 0 rows → respond:</p>
+          <pre class="briefing-manual">403 { "message": "incorrect password. We have shrunk and fallen into the computer. We are the API and DATABASE. Try again, you need to successfully login first to send more requests!" }</pre>
+
+          <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── 2. GET /messages ────────────────────────────</p>
+          <p style="margin-bottom:6px;">Client sends:</p>
+          <pre class="briefing-manual">GET https://madscientistlabs.com/api/messages?limit=3</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If limit parameter is missing → respond:</p>
+          <pre class="briefing-manual">400 Bad Request {
+  "error": {
+    "code": "MISSING_PARAMETER",
+    "message": "The 'limit' query parameter is required. Maximum allowed 3 messages"
+  }
+}</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If DATABASE returns rows → respond:</p>
+          <pre class="briefing-manual">200 OK {
+  "messages": [
+    { "id": "1", "content": "<span class="blank">___</span>" },
+    { "id": "2", "content": "<span class="blank">___</span>" },
+    { "id": "3", "content": "<span class="blank">___</span>" }
+  ]
+}</pre>
+          <p style="margin-top:6px;font-size:12px;color:var(--dim);">// Snippets are short on purpose — Group 1 will need to ask for a specific message by id.</p>
+
+          <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── 3. GET /messages?id= ────────────────────────</p>
+          <p style="margin-bottom:6px;">Client sends:</p>
+          <pre class="briefing-manual">GET https://madscientistlabs.com/api/messages?id=2</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If DATABASE returns no row → respond:</p>
+          <pre class="briefing-manual">404 { "message": "message not found" }</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If DATABASE returns the row → respond:</p>
+          <pre class="briefing-manual">200 OK {
+  "id": "<span class="blank">___</span>",
+  "content": "<span class="blank">___</span>"
+}</pre>
+
+          <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── 4. DELETE /protocols ────────────────────────</p>
+          <p style="color:var(--amber);margin-bottom:6px;">⚠ This is the one that unlocks the room.</p>
+          <p style="margin-bottom:6px;">Client sends:</p>
+          <pre class="briefing-manual">DELETE https://madscientistlabs.com/api/protocols/SECURITY_PROTOCOL</pre>
+          <p style="margin-top:8px;margin-bottom:6px;">If DATABASE confirms 1 row deleted → respond:</p>
+          <pre class="briefing-manual">200 OK { "success": true, "message": "SECURITY_PROTOCOL deactivated" }</pre>
+          <p style="margin-top:6px;color:var(--amber);margin-bottom:8px;">🎉 The room unlocks.</p>
+          <p style="margin-bottom:6px;">If DATABASE returns 0 rows → respond:</p>
+          <pre class="briefing-manual">404 { "message": "protocol not found" }</pre>
+        </div>
+
       </div>
 
       <!-- GROUP 3 -->
