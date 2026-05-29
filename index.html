@@ -554,9 +554,9 @@ BODY: { "username": "<span class="blank">___</span>", "password": "<span class="
           <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── 4. DELETE /protocols ────────────────────────</p>
           <p style="color:var(--amber);margin-bottom:6px;">⚠ This is the one that unlocks the room.</p>
           <p style="margin-bottom:6px;">Client sends:</p>
-          <pre class="briefing-manual">DELETE https://madscientistlabs.com/api/protocols/SECURITY_PROTOCOL</pre>
+          <pre class="briefing-manual">DELETE https://madscientistlabs.com/api/protocols/</pre>
           <p style="margin-top:8px;margin-bottom:6px;">If DATABASE confirms 1 row deleted → respond:</p>
-          <pre class="briefing-manual">200 OK { "success": true, "message": "SECURITY_PROTOCOL deactivated" }</pre>
+          <pre class="briefing-manual">200 OK { "success": true, "message": " deactivated" }</pre>
           <p style="margin-top:6px;color:var(--amber);margin-bottom:8px;">🎉 The room unlocks.</p>
           <p style="margin-bottom:6px;">If DATABASE returns 0 rows → respond:</p>
           <pre class="briefing-manual">404 { "message": "protocol not found" }</pre>
