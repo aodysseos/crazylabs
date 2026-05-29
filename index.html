@@ -810,7 +810,7 @@ function updateFreePlaceholder() {
     if (g2Mode === 'reply') {
       ta.placeholder = '200 OK\n{ "data": { ... } }';
     } else {
-      ta.placeholder = 'SELECT * FROM users WHERE id = $1;';
+      ta.placeholder = 'SQL';
     }
   } else if (currentGroup === 3) {
     ta.placeholder = 'RESULT: [{ "id": 1, "name": "Alice" }]';
