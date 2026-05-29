@@ -276,6 +276,101 @@
 
   .hidden { display: none !important; }
 
+  /* ── mission briefing button ── */
+  #briefing-btn {
+    background: none;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    font-family: inherit;
+    font-size: 11px;
+    padding: 2px 8px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: color .2s, border-color .2s, box-shadow .2s;
+  }
+  #briefing-btn:hover { box-shadow: 0 0 8px #ffb00066; }
+
+  /* ── briefing modal ── */
+  #briefing-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    background: rgba(0,0,0,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #briefing-modal .modal-box {
+    background: #000;
+    border: 1px solid var(--green);
+    box-shadow: 0 0 30px #00ff4122;
+    max-width: 680px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+  }
+  #briefing-modal .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--dim);
+    flex: 0 0 auto;
+  }
+  #briefing-modal .modal-header span {
+    color: var(--amber);
+    letter-spacing: 3px;
+    font-size: 13px;
+  }
+  #briefing-modal .modal-close {
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 2px 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+  }
+  #briefing-modal .modal-close:hover { color: var(--green); border-color: var(--green); }
+  #briefing-modal .modal-body {
+    overflow-y: auto;
+    padding: 20px 20px;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .briefing-label {
+    color: var(--dim);
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .briefing-section p {
+    color: var(--green);
+    line-height: 1.7;
+    font-size: 13px;
+  }
+  .briefing-manual {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--green);
+    line-height: 1.8;
+    font-size: 13px;
+    background: #060606;
+    border: 1px solid var(--dim);
+    padding: 12px 16px;
+    font-family: inherit;
+  }
+  .blank {
+    color: var(--amber);
+    text-shadow: 0 0 6px #ffb00088;
+    letter-spacing: 0;
+  }
+
   /* config error screen */
   #config-error {
     position: fixed;
@@ -338,12 +433,60 @@
   </button>
 </div>
 
+<!-- mission briefing modal -->
+<div id="briefing-modal" class="hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>// MISSION BRIEFING</span>
+      <button class="modal-close" id="briefing-close">[ CLOSE ]</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- GROUP 1 -->
+      <div id="briefing-g1" class="briefing-group hidden">
+        <div class="briefing-section">
+          <div class="briefing-label">// INTRODUCTION</div>
+          <p>Below you will find your computer manual. You will need to complete it in order to establish communication. Remember, not all the answers will be revealed at once!</p>
+        </div>
+        <div class="briefing-section">
+          <div class="briefing-label">// MANUAL</div>
+          <pre class="briefing-manual"><span class="blank">__</span> https://<span class="blank">__</span>/api/login
+BODY: { username: "madscientist", password: "G3G1B2G2C2B2A1F1C3" }
+<span class="blank">__</span> https://<span class="blank">__</span>/api/<span class="blank">__</span>
+<span class="blank">__</span> https://<span class="blank">__</span>/api/<span class="blank">__</span>/<span class="blank">__</span>?id=<span class="blank">__</span>
+<span class="blank">__</span> https://<span class="blank">__</span>/api/<span class="blank">__</span>/<span class="blank">__</span></pre>
+        </div>
+      </div>
+
+      <!-- GROUP 2 -->
+      <div id="briefing-g2" class="briefing-group hidden">
+        <div class="briefing-section">
+          <div class="briefing-label">// BRIEFING STATUS</div>
+          <p style="color:var(--dim);">// NO BRIEFING DATA LOADED FOR THIS NODE</p>
+        </div>
+      </div>
+
+      <!-- GROUP 3 -->
+      <div id="briefing-g3" class="briefing-group hidden">
+        <div class="briefing-section">
+          <div class="briefing-label">// BRIEFING STATUS</div>
+          <p style="color:var(--dim);">// NO BRIEFING DATA LOADED FOR THIS NODE</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- main app shell -->
 <div id="app">
   <div id="header">
     <span class="title">CRAZYLABS // SECURE TERMINAL</span>
     <span class="node" id="node-label">::  ::</span>
-    <button id="change-group-btn">CHANGE NODE</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="briefing-btn" class="hidden">⬛ MISSION BRIEFING</button>
+      <button id="change-group-btn">CHANGE NODE</button>
+    </div>
   </div>
 
   <div id="feed"></div>
@@ -508,9 +651,34 @@ function applyGroupUI() {
   document.getElementById('g1-fields').classList.toggle('hidden', g !== 1);
   document.getElementById('free-fields').classList.toggle('hidden', g === 1);
 
+  // show briefing button now that a group is selected
+  document.getElementById('briefing-btn').classList.remove('hidden');
+
   // placeholder per group/mode
   updateFreePlaceholder();
 }
+
+// ─────────────────────────────────────────────
+// Mission briefing modal
+// ─────────────────────────────────────────────
+document.getElementById('briefing-btn').addEventListener('click', () => {
+  // hide all group content then show the current one
+  document.querySelectorAll('.briefing-group').forEach(el => el.classList.add('hidden'));
+  const panel = document.getElementById('briefing-g' + currentGroup);
+  if (panel) panel.classList.remove('hidden');
+  document.getElementById('briefing-modal').classList.remove('hidden');
+});
+
+document.getElementById('briefing-close').addEventListener('click', () => {
+  document.getElementById('briefing-modal').classList.add('hidden');
+});
+
+// close on backdrop click
+document.getElementById('briefing-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('briefing-modal')) {
+    document.getElementById('briefing-modal').classList.add('hidden');
+  }
+});
 
 function updateFreePlaceholder() {
   const ta = document.getElementById('freetext-textarea');
