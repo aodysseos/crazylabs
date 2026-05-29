@@ -580,18 +580,16 @@ BODY: { "username": "<span class="blank">___</span>", "password": "<span class="
           <div class="briefing-label">// MANUAL — HOW TO RESPOND TO SQL</div>
           <p style="margin-bottom:10px;">Group 2 will send you SQL commands. Look up the answer in your tables, and hand back the rows.</p>
 
-          <p style="margin-bottom:6px;color:var(--dim);">── users table ─────────────────────────────────</p>
           <p style="margin-bottom:6px;">If you find a match → hand back 1 row:</p>
           <pre class="briefing-manual">1 | madscientist | <span class="blank">__</span></pre>
-          <p style="margin-top:8px;margin-bottom:6px;">If nothing matches → hand back 0 rows:</p>
-          <pre class="briefing-manual">(no rows)</pre>
 
           <p style="margin-top:14px;margin-bottom:6px;color:var(--dim);">── messages table ───────────────────────────────</p>
-          <p style="margin-bottom:6px;">Hand back the first N rows (where N is the LIMIT number). For LIMIT 3, that's all three rows:</p>
+          <p style="margin-bottom:6px;">If you find a match → N rows (where N is the LIMIT number). For LIMIT 3, that's all three rows:</p>
           <pre class="briefing-manual">1 | Hello world!
 2 | Hello new world!
 3 | Hello new new world!</pre>
-          <p style="margin-top:8px;margin-bottom:6px;">If nothing matches → hand back 0 rows:</p>
+
+          <p style="margin-top:14px;margin-bottom:6px;">If nothing matches → hand back 0 rows:</p>
           <pre class="briefing-manual">(no rows)</pre>
         </div>
 
